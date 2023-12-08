@@ -1,6 +1,6 @@
 const { validator } = require('../utils/validator');
 const query = require('../modules/user.query');
-const { comparePassword, generateToken } = require('../services/auth.service.js');
+const { generateToken } = require('../services/auth.service.js');
 const HTTPStatusCode = new (require('../common/constants/HttpStatusCode'))();
 
 // Middleware kiểm tra body request
@@ -45,6 +45,7 @@ exports.generateTokens = async (req, res, next) => {
     const user = req.user;
     const payload = {
         id: user.id,
+        exp: Math.floor(Date.now() / 1000) + parseInt(process.env.ACCESS_TOKEN_LIFE)
     };
 
     const accessToken = generateToken(payload, process.env.ACCESS_TOKEN_SECRET, process.env.ACCESS_TOKEN_LIFE);
