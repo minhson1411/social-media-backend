@@ -56,6 +56,10 @@
                 },
                 "name": {
                   "example": "any"
+                },
+                "profileAvatar": {},
+                "dateOfBirth": {
+                  "example": "any"
                 }
               }
             }
