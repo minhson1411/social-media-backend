@@ -7,13 +7,9 @@ exports.authenticatePassword = async (req, res, next) => {
     const email = req.body.email.toLowerCase();
     const password = req.body.password;
     const dataQuery = await query.getUsers(email);
-    // if (dataQuery.length === 0 || !comparePassword(password, dataQuery.data[0].password)) {
-    //     return res.status(401).send('Invalid email or password');
-    // }
     if (dataQuery.length === 0 || password !== dataQuery.data[0].password) {
         return res.status(HTTPStatusCode.Unauthorized).send('Invalid email or password');
     }
-
     req.user = dataQuery.data[0];
     next();
 }
@@ -41,10 +37,6 @@ exports.generateTokens = async (req, res, next) => {
             return res.status(HTTPStatusCode.Unauthorized).send('Login failed, please try again');
         });
     } else {
-        // const jwtPayload = await verifyToken(user.refreshToken, process.env.REFRESH_TOKEN_SECRET);
-        // if (!jwtPayload) {
-        //     return res.status(HTTPStatusCode.Unauthorized).send('Login failed, please try again');
-        // }
         refreshToken = user.refreshToken;
     }
 
