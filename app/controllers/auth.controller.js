@@ -19,18 +19,6 @@ require("dotenv").config();
 
 exports.authController = {
   login: async (req, res) => {
-    /* #swagger.tags = ['Auth'] 
-    #swagger.description = 'Endpoint to login.'
-    #swagger.requestBody = {
-      required: true,
-      content: {
-        "multipart/form-data": {
-          schema: {
-            $ref: "#/definitions/SignIn"
-          }
-        }
-      }
-    } */
     const accessToken = req.accessToken;
     const refreshToken = req.refreshToken;
     const user = req.user;
@@ -43,48 +31,6 @@ exports.authController = {
   },
 
   register: async (req, res) => {
-    /*#swagger.tags = ['Auth']
-    #swagger.description = 'Endpoint to register account.'
-    #swagger.requestBody = {
-      required: true,
-      content: {
-        "multipart/form-data": {
-          schema: {
-            "type": "object",
-            "properties": {
-              "full_name": {
-                "type": "string",
-                "example": "Nguyen Van A"
-              },
-              "email": {
-                "type": "string",
-                "example": "nguyenvana@gmail.com"
-              },
-              "password": {
-                "type": "string",
-                "example": "Abc123!@#"
-              },
-              "date_of_birth": {
-                "type": "string",
-                "example": "2000-01-01"
-              },
-              "avatar": {
-                "type": "string",
-                "format": "binary"
-              }
-            },
-            "required": [
-              "full_name",
-              "email",
-              "password",
-              "date_of_birth",
-              "avatar"
-            ]
-          }
-        }
-      }
-    }
-  */
     let { email, full_name, password, date_of_birth } = req.body;
     const avatar = req.file;
     if (!avatar) {
@@ -117,10 +63,11 @@ exports.authController = {
           message: "Register failed",
         });
       }
+      const payloadAccessToken = {
+        _id: user_id,
+      };
       const accessToken = authServices.generateToken(
-        {
-          _id: user_id,
-        },
+        payloadAccessToken,
         process.env.ACCESS_TOKEN_SECRET,
         process.env.ACCESS_TOKEN_LIFE.toString()
       );
@@ -140,7 +87,6 @@ exports.authController = {
     const token = req.body.token;
     const payload = authServices.verifyToken(
       token,
-
       process.env.ACCESS_TOKEN_SECRET
     );
     if (!payload) {
@@ -155,7 +101,6 @@ exports.authController = {
     const refreshToken = req.body.refreshToken;
     const user_id = getPayloadFromToken(
       refreshToken,
-
       process.env.REFRESH_TOKEN_SECRET
     )._id;
     const blacklistToken = await userQuery.getBlacklistToken(user_id);
@@ -242,7 +187,7 @@ exports.authController = {
         }
         await userQuery.updateResetPasswordToken(user.data[0].user_id, token);
         const expireTime = new Date(Date.now() + 300000)
-          .toLocaleString()
+          .toISOString()
           .slice(0, 19)
           .replace("T", " ");
         await userQuery.updateResetPasswordExpires(
