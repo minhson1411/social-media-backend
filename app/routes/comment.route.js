@@ -15,28 +15,17 @@ commentRouter.get(
   commentController.getCommentInPost
 );
 
-commentRouter.get(
-  "/:comment_id",
-  authenticateAccessToken,
-  commentController.manageComment
-);
-
-commentRouter.post(
-  "/:comment_id",
-  authenticateAccessToken,
-  commentController.manageComment
-);
-
 commentRouter.patch(
   "/:comment_id",
   authenticateAccessToken,
-  commentController.manageComment
+  commentController.updateComment
 );
 
 commentRouter.delete(
   "/:comment_id",
   authenticateAccessToken,
-  commentController.manageComment
+  commentController.deleteComment
 );
+
 
 module.exports = commentRouter;

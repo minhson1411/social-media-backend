@@ -8,17 +8,7 @@ postRouter.post("/new", authenticateAccessToken, postController.createNewPost);
 postRouter.get(
   "/:post_id",
   authenticateAccessToken,
-  postController.managePostbyID
-);
-postRouter.post(
-  "/:post_id",
-  authenticateAccessToken,
-  postController.managePostbyID
-);
-postRouter.delete(
-  "/:post_id",
-  authenticateAccessToken,
-  postController.managePostbyID
+  postController.getPostbyID
 );
 postRouter.put(
   "/update/:post_id",
