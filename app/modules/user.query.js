@@ -41,7 +41,7 @@ exports.getUsers = async (email) => {
 };
 
 exports.getUserById = async (id) => {
-  const sql = "SELECT * FROM users WHERE id = ? LIMIT 1";
+  const sql = "SELECT * FROM users WHERE user_id = ? LIMIT 1";
   const values = [id];
   const result = await new Promise((resolve, reject) => {
     db.query(sql, values, (err, result) => {
@@ -57,16 +57,23 @@ exports.getUserById = async (id) => {
 };
 
 exports.createUser = async (
-  userID,
+  user_id,
   name,
   email,
   password,
-  profileAvatar,
-  dateOfBirth
+  profile_avatar,
+  date_of_birth
 ) => {
   const sql =
     "INSERT INTO users (user_id, full_name, email, password, profile_avatar, date_of_birth) VALUES (?, ?, ?, ?, ?, ?)";
-  const values = [userID, name, email, password, profileAvatar, dateOfBirth];
+  const values = [
+    user_id,
+    name,
+    email,
+    password,
+    profile_avatar,
+    date_of_birth,
+  ];
   return new Promise((resolve, reject) => {
     db.query(sql, values, (err, result) => {
       if (err) {
@@ -80,8 +87,39 @@ exports.createUser = async (
 };
 
 exports.updateRefreshToken = async (user_id, refreshToken) => {
-  const sql = "UPDATE users SET refreshToken = ? WHERE user_id = ?";
+  const sql = "UPDATE users SET refresh_token = ? WHERE user_id = ?";
   const values = [refreshToken, user_id];
+  return new Promise((resolve, reject) => {
+    db.query(sql, values, (err, result) => {
+      if (err) {
+        console.error(err);
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
+
+exports.updateBlacklistToken = async (user_id, access_token, refresh_token) => {
+  const sql =
+    "UPDATE users SET access_token = ?, refresh_token = ? WHERE user_id = ?";
+  const values = [access_token, refresh_token, user_id];
+  return new Promise((resolve, reject) => {
+    db.query(sql, values, (err, result) => {
+      if (err) {
+        console.error(err);
+        reject(err);
+      } else {
+        resolve(result);
+      }
+    });
+  });
+};
+
+exports.getBlacklistToken = async (user_id) => {
+  const sql = "SELECT access_token, refresh_token FROM users WHERE user_id = ?";
+  const values = [user_id];
   return new Promise((resolve, reject) => {
     db.query(sql, values, (err, result) => {
       if (err) {
