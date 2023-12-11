@@ -13,12 +13,24 @@ const transporter = nodeMailer.createTransport({
 });
 const crypto = require("crypto");
 
-const { v4: uuidv4 } = require("uuid");
 const { getPayloadFromToken } = require("../services/auth.service.js");
 require("dotenv").config();
 
 exports.authController = {
   login: async (req, res) => {
+    /* #swagger.tags = ['Auth'] 
+    #swagger.description = 'Endpoint to login.'
+    #swagger.summary = 'Login'
+    #swagger.requestBody = {
+      required: true,
+      content: {
+        "multipart/form-data": {
+          schema: {
+            $ref: "#/definitions/SignIn"
+          }
+        }
+      }
+    } */
     const accessToken = req.accessToken;
     const refreshToken = req.refreshToken;
     const user = req.user;
@@ -31,6 +43,50 @@ exports.authController = {
   },
 
   register: async (req, res) => {
+    /*#swagger.tags = ['Auth']
+    #swagger.description = 'Endpoint to register account.'
+    #swagger.summary = 'Register'
+    #swagger.requestBody = {
+      required: true,
+      content: {
+        "multipart/form-data": {
+          schema: {
+            "type": "object",
+            "properties": {
+              "full_name": {
+                "type": "string",
+                "example": "Nguyen Van A"
+              },
+              "email": {
+                "type": "string",
+                "example": "nguyenvana@gmail.com"
+              },
+              "password": {
+                "type": "string",
+                "example": "Abc123!@#"
+              },
+              "date_of_birth": {
+                "type": "string",
+                "example": "yyyy-mm-dd"
+              },
+              "avatar": {
+                "type": "string",
+                "example": "avatar.jpg",
+                "format": "binary"
+              }
+            },
+            "required": [
+              "full_name",
+              "email",
+              "password",
+              "date_of_birth",
+              "avatar"
+            ]
+          }
+        }
+      }
+    }
+  */
     let { email, full_name, password, date_of_birth } = req.body;
     const avatar = req.file;
     if (!avatar) {
@@ -39,7 +95,8 @@ exports.authController = {
       });
     }
     const profile_avatar = avatar.path;
-    console.log(req.file);
+    const relativePath = profile_avatar.split("public")[1];
+    const profile_avatar_res = relativePath.replace(/\\/g, "/");
     try {
       const userList = await userQuery.getUsers(email);
       if (userList.length > 0) {
@@ -47,7 +104,7 @@ exports.authController = {
           message: "Email already exists",
         });
       }
-      const user_id = uuidv4();
+      const user_id = req.body.user_id;
       const hashedPassword = await authServices.hashPassword(password);
       password = hashedPassword;
       const createUser = await userQuery.createUser(
@@ -55,7 +112,7 @@ exports.authController = {
         full_name,
         email,
         password,
-        profile_avatar,
+        profile_avatar_res,
         date_of_birth
       );
       if (!createUser) {
@@ -84,6 +141,27 @@ exports.authController = {
   },
 
   verify: (req, res) => {
+    /* #swagger.tags = ['Auth'] 
+    #swagger.summary = 'Verify user'
+    #swagger.description = 'Endpoint to verify token.'
+    #swagger.requestBody = {
+      required: true,
+      content: {
+        "multipart/form-data": {
+          schema: {
+            type: "object",
+            properties: {
+              token: {
+                type: "string",
+                example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI5MjA2YmIyYS1mYzlkLTQxYmMtYjhhZS1lYjMzZGZkMTY1NWMiLCJpYXQiOjE2OTg5NDc4NjQsImV4cCI6MTY5OTAzNDI2NH0.-iuVnSARj73kVfvPEIDstTERMP0VueK3QTDZbIAc8Oc"
+              }
+            },
+            required: [ "token" ]
+          }
+        }
+      }
+    }
+    */
     const token = req.body.token;
     const payload = authServices.verifyToken(
       token,
@@ -98,6 +176,27 @@ exports.authController = {
   },
 
   refresh: async (req, res) => {
+    /* #swagger.tags = ['Auth']
+        #swagger.summary = 'Get new access token'
+        #swagger.description = 'Endpoint to refresh token.'
+        #swagger.requestBody = {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: {
+                  token: {
+                    type: "string",
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI5MjA2YmIyYS1mYzlkLTQxYmMtYjhhZS1lYjMzZGZkMTY1NWMiLCJpYXQiOjE2OTg5NDc4NjQsImV4cCI6MTY5OTAzNDI2NH0.-iuVnSARj73kVfvPEIDstTERMP0VueK3QTDZbIAc8Oc"
+                  }
+                },
+                required: [ "token" ]
+              }
+            }
+          }
+        }
+    */
     const refreshToken = req.body.refreshToken;
     const user_id = getPayloadFromToken(
       refreshToken,
@@ -137,6 +236,19 @@ exports.authController = {
   },
 
   logout: async (req, res) => {
+    /*
+      #swagger.tags = ['Auth']
+      #swagger.summary = 'Logout'
+      #swagger.description = 'Endpoint to logout.' 
+      #swagger.security = [{ bearerAuth: [] }]
+      #swagger.parameters['authorization'] = {
+        in: 'header',
+        description: 'Access token (not required if you lock authorize)',
+        required: false,
+        type: 'string',
+      }
+    */
+
     try {
       const access_token = req.headers.authorization.split(" ")[1];
       const id = getPayloadFromToken(
@@ -173,6 +285,29 @@ exports.authController = {
   },
 
   getTokenReset: async (req, res) => {
+    /*
+      #swagger.tags = ['Auth']
+      #swagger.summary = 'Get token reset password'
+      #swagger.description = 'Endpoint to get token reset password.'
+      #swagger.requestBody = {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              properties: {
+                email: {
+                  type: "string",
+                  example: "example@gmail.com"
+                }
+              },
+              required: [ "email" ]
+            }
+          }
+        }
+      }
+    */
+
     try {
       const host = req.get("host");
       const http = req.protocol;
@@ -200,7 +335,8 @@ exports.authController = {
           subject: "Reset password",
           html:
             `<h1>Reset password</h1>` +
-            `<p>Click <a href="${http}://${host}/auth/reset/${token}">here</a> to reset your password</p>`,
+            `<p>Click <a href="${http}://${host}/auth/reset/${token}">here</a> to reset your password</p>` + 
+            `<p>Or this is your token: ${token}</p>`,
         };
         transporter.sendMail(data, (err, info) => {
           if (err) {
@@ -222,6 +358,34 @@ exports.authController = {
   },
 
   resetPassword: async (req, res) => {
+    /* 
+      #swagger.tags = ['Auth']
+      #swagger.summary = 'Reset password'
+      #swagger.description = 'Endpoint to reset password.'
+      #swagger.parameters['token'] = {
+        in: 'path',
+        description: 'Token you received in email to reset password',
+        required: true,
+        type: 'string'
+      }
+      #swagger.requestBody = {
+        required: true,
+        content: {
+          "multipart/form-data": {
+            schema: {
+              type: "object",
+              properties: {
+                password: {
+                  type: "string",
+                  example: "Abc123!@#"
+                }
+              },
+              required: [ "password" ]
+            }
+          }
+        }
+      }
+    */
     try {
       const token = req.params.token;
       const password = req.body.password;

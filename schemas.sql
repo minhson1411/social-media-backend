@@ -6,7 +6,21 @@ create table if not exists blacklist_token
 create table if not exists comment_likes
 (
     like_id    int auto_increment
-        constraint `PRIMARY`
+        primary key,
+    comment_id varchar(50) not null,
+    user_id    varchar(50) not null
+);
+
+create index user_id
+    on comment_likes (user_id);
+
+alter table comment_likes
+    add constraint unique_like
+        unique (comment_id, user_id);
+
+create table if not exists comment_likes
+(
+    like_id    int auto_increment
         primary key,
     comment_id varchar(50) not null,
     user_id    varchar(50) not null
@@ -22,13 +36,18 @@ alter table comment_likes
 create table if not exists comments
 (
     comment_id varchar(50) not null,
+    comment_id varchar(50) not null,
     content    text        not null,
     comment_at datetime    not null
 );
 
 alter table comments
-    add constraint `PRIMARY`
-        primary key (comment_id);
+    add primary key (comment_id);
+
+alter table comment_likes
+    add constraint comment_likes_ibfk_1
+        foreign key (comment_id) references comments (comment_id);
+    add primary key (comment_id);
 
 alter table comment_likes
     add constraint comment_likes_ibfk_1
@@ -46,8 +65,18 @@ create table if not exists conversations
 );
 
 alter table conversations
-    add constraint `PRIMARY`
-        primary key (conversation_id);
+    add primary key (conversation_id);
+
+create table if not exists followers
+create table if not exists conversations
+(
+    conversation_id   varchar(50)  not null,
+    conversation_name varchar(100) not null,
+    created_at        datetime     not null
+);
+
+alter table conversations
+    add primary key (conversation_id);
 
 create table if not exists followers
 (
@@ -56,8 +85,7 @@ create table if not exists followers
 );
 
 alter table followers
-    add constraint `PRIMARY`
-        primary key (followed_id, follower_id);
+    add primary key (followed_id, follower_id);
 
 create table if not exists messages
 (
@@ -65,7 +93,7 @@ create table if not exists messages
     conversation_id varchar(50) not null,
     sender_id       varchar(50) not null,
     content         text        not null,
-    timestamp       datetime    not null
+    sent_at         datetime    not null
 );
 
 create index conversation_id
@@ -75,8 +103,44 @@ create index sender_id
     on messages (sender_id);
 
 alter table messages
-    add constraint `PRIMARY`
-        primary key (message_id);
+    add primary key (message_id);
+
+alter table messages
+    add constraint messages_ibfk_1
+        foreign key (conversation_id) references conversations (conversation_id);
+
+create table if not exists participants
+(
+    participant_id  varchar(50) not null,
+    conversation_id varchar(50) not null,
+    user_id         varchar(50) not null
+);
+
+create index conversation_id
+    on participants (conversation_id);
+
+create index user_id
+    on participants (user_id);
+alter table followers
+    add primary key (followed_id, follower_id);
+
+create table if not exists messages
+(
+    message_id      varchar(50) not null,
+    conversation_id varchar(50) not null,
+    sender_id       varchar(50) not null,
+    content         text        not null,
+    sent_at         datetime    not null
+);
+
+create index conversation_id
+    on messages (conversation_id);
+
+create index sender_id
+    on messages (sender_id);
+
+alter table messages
+    add primary key (message_id);
 
 alter table messages
     add constraint messages_ibfk_1
@@ -96,8 +160,7 @@ create index user_id
     on participants (user_id);
 
 alter table participants
-    add constraint `PRIMARY`
-        primary key (participant_id);
+    add primary key (participant_id);
 
 alter table participants
     add constraint participants_ibfk_1
@@ -106,7 +169,27 @@ alter table participants
 create table if not exists post_likes
 (
     like_id int auto_increment
-        constraint `PRIMARY`
+        primary key,
+    post_id varchar(50) not null,
+    user_id varchar(50) not null
+);
+
+create index user_id
+    on post_likes (user_id);
+
+alter table post_likes
+    add constraint unique_like
+        unique (post_id, user_id);
+alter table participants
+    add primary key (participant_id);
+
+alter table participants
+    add constraint participants_ibfk_1
+        foreign key (conversation_id) references conversations (conversation_id);
+
+create table if not exists post_likes
+(
+    like_id int auto_increment
         primary key,
     post_id varchar(50) not null,
     user_id varchar(50) not null
@@ -128,8 +211,12 @@ create table if not exists posts
 );
 
 alter table posts
-    add constraint `PRIMARY`
-        primary key (post_id);
+    add primary key (post_id);
+
+alter table post_likes
+    add constraint post_likes_ibfk_1
+        foreign key (post_id) references posts (post_id);
+    add primary key (post_id);
 
 alter table post_likes
     add constraint post_likes_ibfk_1
@@ -144,6 +231,9 @@ create table if not exists user_comment
     post_id    varchar(50) not null,
     user_id    varchar(50) not null,
     comment_id varchar(50) not null
+    post_id    varchar(50) not null,
+    user_id    varchar(50) not null,
+    comment_id varchar(50) not null
 );
 
 alter table user_comment
@@ -152,11 +242,11 @@ alter table user_comment
 
 alter table user_comment
     add constraint post_id_UNIQUE
-        unique (post_id);
+        unique (post_id, user_id, comment_id);
 
-alter table user_comment
-    add constraint user_id_UNIQUE
-        unique (user_id);
+-- alter table user_comment
+--     add constraint user_id_UNIQUE
+--         unique (user_id);
 
 alter table user_comment
     add constraint user_comment_comments_comment_id_fk
@@ -170,13 +260,16 @@ create table if not exists user_posts
 (
     post_id varchar(50) not null,
     user_id varchar(50) not null
+    post_id varchar(50) not null,
+    user_id varchar(50) not null
 );
 
 alter table user_posts
-    add constraint `PRIMARY`
-        primary key (user_id, post_id);
+    add primary key (user_id, post_id);
+    add primary key (user_id, post_id);
 
 alter table user_posts
+    add constraint user_posts_posts_post_id_fk
     add constraint user_posts_posts_post_id_fk
         foreign key (post_id) references posts (post_id);
 
@@ -194,8 +287,12 @@ create table if not exists users
 );
 
 alter table users
-    add constraint `PRIMARY`
-        primary key (user_id);
+    add primary key (user_id);
+
+alter table comment_likes
+    add constraint comment_likes_ibfk_2
+        foreign key (user_id) references users (user_id);
+    add primary key (user_id);
 
 alter table comment_likes
     add constraint comment_likes_ibfk_2
@@ -203,11 +300,27 @@ alter table comment_likes
 
 alter table followers
     add constraint followers_users_user_id_fk
+alter table followers
+    add constraint followers_users_user_id_fk
         foreign key (follower_id) references users (user_id);
 
 alter table followers
     add constraint followers_users_user_id_fk2
+alter table followers
+    add constraint followers_users_user_id_fk2
         foreign key (followed_id) references users (user_id);
+
+alter table messages
+    add constraint messages_ibfk_2
+        foreign key (sender_id) references users (user_id);
+
+alter table participants
+    add constraint participants_ibfk_2
+        foreign key (user_id) references users (user_id);
+
+alter table post_likes
+    add constraint post_likes_ibfk_2
+        foreign key (user_id) references users (user_id);
 
 alter table messages
     add constraint messages_ibfk_2
@@ -236,4 +349,6 @@ alter table users
 alter table users
     add constraint user_id_UNIQUE
         unique (user_id);
+
+
 
