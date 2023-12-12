@@ -8,6 +8,9 @@
   "servers": [
     {
       "url": "http://localhost:3000"
+    },
+    {
+      "url": "https://glowing-xylophone-6q9pwww977h449p-3000.app.github.dev/"
     }
   ],
   "tags": [
@@ -124,7 +127,7 @@
                 "properties": {
                   "token": {
                     "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI5MjA2YmIyYS1mYzlkLTQxYmMtYjhhZS1lYjMzZGZkMTY1NWMiLCJpYXQiOjE2OTg5NDc4NjQsImV4cCI6MTY5OTAzNDI2NH0.-iuVnSARj73kVfvPEIDstTERMP0VueK3QTDZbIAc8Oc"
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
                   }
                 },
                 "required": [
@@ -142,7 +145,7 @@
           "Auth"
         ],
         "summary": "Get new access token",
-        "description": "Endpoint to refresh token.",
+        "description": "Endpoint to get new access token.",
         "responses": {
           "default": {
             "description": ""
@@ -155,14 +158,11 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "token": {
+                  "refreshToken": {
                     "type": "string",
-                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiI5MjA2YmIyYS1mYzlkLTQxYmMtYjhhZS1lYjMzZGZkMTY1NWMiLCJpYXQiOjE2OTg5NDc4NjQsImV4cCI6MTY5OTAzNDI2NH0.-iuVnSARj73kVfvPEIDstTERMP0VueK3QTDZbIAc8Oc"
+                    "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9"
                   }
-                },
-                "required": [
-                  "token"
-                ]
+                }
               }
             }
           }
@@ -1237,7 +1237,7 @@
         ]
       }
     },
-    "/chat/getMessages": {
+    "/chat/getMessages/{id}": {
       "get": {
         "tags": [
           "Chat"
@@ -1245,6 +1245,15 @@
         "summary": "Get all messages in conversation",
         "description": "Endpoint to get messages",
         "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Conversation id"
+          },
           {
             "name": "authorization",
             "in": "header",
@@ -1264,24 +1273,7 @@
           {
             "bearerAuth": []
           }
-        ],
-        "requestBody": {
-          "content": {
-            "multipart/form-data": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "conversation_id": {
-                    "type": "string"
-                  }
-                },
-                "required": [
-                  "conversation_id"
-                ]
-              }
-            }
-          }
-        }
+        ]
       }
     }
   },

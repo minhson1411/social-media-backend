@@ -4,7 +4,7 @@ const { v4: uuidv4 } = require("uuid");
 const { getNow } = require("../utils/convertDate.js");
 
 exports.chatController = {
-  joinConversation: async (req, res) => {
+  joinConversation: async (req, res, next) => {
     /*
       #swagger.tags = ['Chat']
       #swagger.summary = 'Join conversation'
@@ -36,8 +36,11 @@ exports.chatController = {
     */
     try {
       const { conversation_id } = req.body;
-      const isJoined = await chatQuery.checkUserInConversation(conversation_id, req.user.user_id);
-      if (isJoined) { 
+      const isJoined = await chatQuery.checkUserInConversation(
+        conversation_id,
+        req.user.user_id
+      );
+      if (isJoined) {
         return res.status(HTTPStatusCode.BadRequest).json({
           message: "User already in conversation",
         });
@@ -53,12 +56,12 @@ exports.chatController = {
         data: result,
       });
     } catch (error) {
-      return res.status(HTTPStatusCode.InternalServerError).json({
-        message: error.message,
-      });
+      error.message = "Join conversation failed";
+      error.status = HTTPStatusCode.InternalServerError;
+      next(error);
     }
   },
-  createConversation: async (req, res) => {
+  createConversation: async (req, res, next) => {
     /*
       #swagger.tags = ['Chat']
       #swagger.summary = 'Create conversation'
@@ -92,7 +95,7 @@ exports.chatController = {
       }
     */
     try {
-      const { conversation_name} = req.body;
+      const { conversation_name } = req.body;
       const conversation_id = uuidv4();
       const participant_id = uuidv4();
       const created_at = getNow();
@@ -101,18 +104,23 @@ exports.chatController = {
         conversation_name,
         created_at
       );
-      await chatQuery.joinConversation(participant_id, conversation_id, req.user.user_id);
+      await chatQuery.joinConversation(
+        participant_id,
+        conversation_id,
+        req.user.user_id
+      );
       return res.status(HTTPStatusCode.OK).json({
         message: "Create conversation successfully",
+        conversation_id: conversation_id,
         data: result,
       });
     } catch (error) {
-      return res.status(HTTPStatusCode.InternalServerError).json({
-        message: error.message,
-      });
+      error.message = "Create conversation failed";
+      error.status = HTTPStatusCode.InternalServerError;
+      next(error);
     }
   },
-  leaveConversation: async (req, res) => {
+  leaveConversation: async (req, res, next) => {
     /*
       #swagger.tags = ['Chat']
       #swagger.summary = 'Leave conversation'
@@ -144,8 +152,11 @@ exports.chatController = {
     */
     try {
       const { conversation_id } = req.body;
-      const isJoined = await chatQuery.checkUserInConversation(conversation_id, req.user.user_id);
-      if (!isJoined) { 
+      const isJoined = await chatQuery.checkUserInConversation(
+        conversation_id,
+        req.user.user_id
+      );
+      if (!isJoined) {
         return res.status(HTTPStatusCode.BadRequest).json({
           message: "User not in conversation",
         });
@@ -159,12 +170,12 @@ exports.chatController = {
         data: result,
       });
     } catch (error) {
-      return res.status(HTTPStatusCode.InternalServerError).json({
-        message: error.message,
-      });
+      error.message = "Leave conversation failed";
+      error.status = HTTPStatusCode.InternalServerError;
+      next(error);
     }
   },
-  sendMessage: async (req, res) => {
+  sendMessage: async (req, res, next) => {
     /*
       #swagger.tags = ['Chat']
       #swagger.summary = 'Send message'
@@ -199,8 +210,11 @@ exports.chatController = {
     */
     try {
       const { conversation_id, content } = req.body;
-      const isJoined = await chatQuery.checkUserInConversation(conversation_id, req.user.user_id);
-      if (!isJoined) { 
+      const isJoined = await chatQuery.checkUserInConversation(
+        conversation_id,
+        req.user.user_id
+      );
+      if (!isJoined) {
         return res.status(HTTPStatusCode.BadRequest).json({
           message: "User not in conversation",
         });
@@ -219,12 +233,12 @@ exports.chatController = {
         data: result,
       });
     } catch (error) {
-      return res.status(HTTPStatusCode.InternalServerError).json({
-        message: error.message,
-      });
+      error.message = "Send message failed";
+      error.status = HTTPStatusCode.InternalServerError;
+      next(error);
     }
   },
-  getConversations: async (req, res) => {
+  getConversations: async (req, res, next) => {
     /*
       #swagger.tags = ['Chat']
       #swagger.summary = 'Get conversations'
@@ -247,12 +261,12 @@ exports.chatController = {
         data: result,
       });
     } catch (error) {
-      return res.status(HTTPStatusCode.InternalServerError).json({
-        message: error.message,
-      });
+      error.message = "Get conversations failed";
+      error.status = HTTPStatusCode.InternalServerError;
+      next(error);
     }
   },
-  getMessages: async (req, res) => {
+  getMessages: async (req, res, next) => {
     /*
       #swagger.tags = ['Chat']
       #swagger.summary = 'Get all messages in conversation'
@@ -266,33 +280,24 @@ exports.chatController = {
         required: false,
         type: 'string',
       }
-      #swagger.requestBody = {
-        "content": {
-          "multipart/form-data": {
-            schema: {
-              type: "object",
-              properties: {
-                "conversation_id": {
-                  type: "string"
-                }
-              },
-              required: ["conversation_id"]
-            }
-          }
-        }
+      #swagger.parameters['id'] = {
+        in: 'path',
+        description: 'Conversation id',
+        required: true,
+        type: 'string',
       }
     */
     try {
-      const { conversation_id } = req.body;
+      const conversation_id = req.params.id;
       const result = await chatQuery.getMessages(conversation_id);
       return res.status(HTTPStatusCode.OK).json({
         message: "Get messages successfully",
         data: result,
       });
     } catch (error) {
-      return res.status(HTTPStatusCode.InternalServerError).json({
-        message: error.message,
-      });
+      error.message = "Get messages failed";
+      error.status = HTTPStatusCode.InternalServerError;
+      next(error);
     }
   },
 };
