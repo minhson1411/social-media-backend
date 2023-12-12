@@ -102,23 +102,42 @@ exports.updateRefreshToken = async (user_id, refreshToken) => {
 };
 
 exports.updateBlacklistToken = async (user_id, access_token, refresh_token) => {
-  const sql =
-    "UPDATE users SET access_token = ?, refresh_token = ? WHERE user_id = ?";
-  const values = [access_token, refresh_token, user_id];
-  return new Promise((resolve, reject) => {
-    db.query(sql, values, (err, result) => {
+  const sql1 =
+    "INSERT INTO blacklist_token (token) VALUES (?)";
+  const values1 = [access_token];
+  const values2 = [refresh_token];
+  const sql2 = "UPDATE users SET refresh_token = NULL WHERE user_id = ?";
+  const values3 = [user_id];
+  return new Promise((resolve, reject) => { 
+    db.query(sql1, values1, (err) => {
       if (err) {
         console.error(err);
         reject(err);
       } else {
-        resolve(result);
+        db.query(sql1, values2, (err) => {
+          if (err) {
+            console.error(err);
+            reject(err);
+          } else {
+            db.query(sql2, values3, (err, result) => {
+              if (err) {
+                console.error(err);
+                reject(err);
+              } else {
+                resolve(result);
+              }
+            });
+          }
+        });
       }
     });
   });
+    
+
 };
 
 exports.getBlacklistToken = async (user_id) => {
-  const sql = "SELECT access_token, refresh_token FROM users WHERE user_id = ?";
+  const sql = "SELECT refresh_token FROM users WHERE user_id = ?";
   const values = [user_id];
   return new Promise((resolve, reject) => {
     db.query(sql, values, (err, result) => {
@@ -165,7 +184,7 @@ exports.updateResetPasswordExpires = async (user_id, resetPasswordExpires) => {
 exports.getUserByResetPasswordToken = async (resetPasswordToken) => {
   const sql =
     "SELECT * FROM users WHERE reset_password_token = ? and reset_password_expires >= ? LIMIT 1";
-  const values = [resetPasswordToken, Date.now()];
+  const values = [resetPasswordToken, require('../utils/convertDate').getNow()];
   const result = await new Promise((resolve, reject) => {
     db.query(sql, values, (err, result) => {
       if (err) {
