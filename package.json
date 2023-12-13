@@ -1,7 +1,7 @@
 {
-  "name": "codepapers",
+  "name": "social-media-backend",
   "version": "1.0.0",
-  "description": "Backend for CodePapers",
+  "description": "Social Media Backend",
   "main": "server.js",
   "scripts": {
     "start": "nodemon server.js",
